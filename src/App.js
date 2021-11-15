@@ -1,11 +1,15 @@
 import './App.css';
+import { Provider } from 'react-redux';
+import {connect} from 'react-redux'
 import { useState,useEffect } from 'react';
 import {AppBar,Box,Toolbar,Typography,CircularProgress} from '@material-ui/core';
 import axios from 'axios'
+import store from "./redux/store"
+import { fetch_subjects } from './redux/Subjects/Subjects/SubjectActions';
 import FilterBar from './FilterBar';
 import SubjectMain from './SubjectMain';
 
-function App() {
+function App(props) {
 
   const [subjects,setsubjects]=useState(null);
   const [parents,setparents]=useState(null);
@@ -27,20 +31,32 @@ function App() {
     console.log(t.date);
     setFilters(t);
   }
-  useEffect(()=>{
-    axios.get('https://nut-case.s3.amazonaws.com/coursessc.json')
-   .then((response)=>{
-    setPassingSubjects(response.data.slice(0,500));
-     setsubjects(response.data.slice(0,500));
+//   useEffect(()=>{
+//     axios.get('https://nut-case.s3.amazonaws.com/coursessc.json')
+//    .then((response)=>{
+//     setPassingSubjects(response.data.slice(0,500));
+//      setsubjects(response.data.slice(0,500));
      
-    response.data.map(item => temp.add(item['Parent Subject']));
-    const x=Array.from(temp);
+//     response.data.map(item => temp.add(item['Parent Subject']));
+//     const x=Array.from(temp);
     
-    setparents(x);
+//     setparents(x);
     
-   })
+//    })
    
- },[]);
+//  },[]);
+
+useEffect(()=>{
+  props.fetchinfo();
+},[])
+useEffect(()=>{
+  setPassingSubjects(props.subjects.slice(0,500));
+  setsubjects(props.subjects.slice(0,500));
+  props.subjects.map(item=>temp.add(item['Parent Subject']));
+  const x=Array.from(temp);
+  setparents(x);
+  
+},[props.subjects])
  useEffect(()=>{
    
   if(filters){
@@ -73,6 +89,7 @@ function App() {
  
 
   return (
+    <Provider store={store}>
     <div style={{padding:'1% 2%'}} className='App'>
        <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static" className='TitleBar' style={{background:'#1A8DE1'}}>
@@ -96,7 +113,22 @@ function App() {
    {subjects ?<SubjectMain subjects={passingsubjects} filter={filters}/>:<CircularProgress  style={{positon:'absolute',top:'50%',left:'50%'}}/>}
   
     </div>
+    </Provider>
   );
 }
+const mapStatetoProps=state=>{
+  return {
+      subjects:state.subjects
+  }
+ 
+}
 
-export default App;
+const mapDispatchtoProps=dispatch=>{
+  return {
+      fetchinfo:()=>{dispatch(fetch_subjects())}
+  }
+  
+}
+
+export default connect(mapStatetoProps,mapDispatchtoProps)(App)
+// export default App;
